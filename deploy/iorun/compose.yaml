@@ -11,6 +11,7 @@ services:
     working_dir: /data
     environment:
       IORUN_BINDING_FILE: /data/iorun/binding.json
+      PREVIEW_LISTEN_ADDR: 127.0.0.1:2050
       GOMAXPROCS: "2"
       GOMEMLIMIT: 512MiB
       XDG_CACHE_HOME: /data/cache
@@ -33,4 +34,6 @@ networks:
     name: iorun-gemini-api-ciorun03_private
   egress: {}
 volumes:
-  gemini-state: {}
+  gemini-state:
+    external: true
+    name: iorun-aistudio2api-ciorun03_gemini-state

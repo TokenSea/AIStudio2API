@@ -360,6 +360,11 @@ func autoStartService(ctx context.Context, manager *runtimeManager) {
 func rootHandler(apiHandler http.Handler) http.Handler {
 	root := http.NewServeMux()
 	root.Handle("/health", apiHandler)
+	if os.Getenv("IORUN_BINDING_FILE") != "" {
+		root.Handle("/iorun/", apiHandler)
+		root.Handle("/generate/", apiHandler)
+		root.Handle("/readiness", apiHandler)
+	}
 	root.Handle("/api/", compressAdmin(apiHandler))
 	root.Handle("/v1/", apiHandler)
 	root.Handle("/v1beta/", apiHandler)

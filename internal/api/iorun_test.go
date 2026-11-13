@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"image"
@@ -228,20 +229,32 @@ func TestIORunDisconnectAndRestart(t *testing.T) {
 func TestIORunLegacyUnifiedRouteAndBypass(t *testing.T) {
 	f, b, _ := iorunFixture(t)
 	var calls atomic.Int32
+	var pngBytes bytes.Buffer
+	_ = png.Encode(&pngBytes, image.NewGray(image.Rect(0, 0, 1024, 1024)))
+	encoded := base64.StdEncoding.EncodeToString(pngBytes.Bytes())
+	body := strings.ReplaceAll(iorunBody("1K"), "gemini-3-pro-image", "gemini-web-nano-banana-pro")
 	legacy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer "+b.Token || r.Header.Get("X-IORun-Account-ID") != b.AccountID {
 			t.Error("legacy binding")
 		}
 		calls.Add(1)
+		actual, _ := io.ReadAll(r.Body)
+		if r.URL.Path != "/generate/gemini-pro" || string(actual) != body {
+			t.Error("legacy request changed")
+		}
 		w.Header().Set("X-IORun-Image-Source", "google-gemini-web")
-		iorunReply(w, 200, map[string]string{"state": "ready"})
+		w.Header().Set("X-IORun-Image-Model", "gemini-web-nano-banana-pro")
+		w.Header().Set("X-IORun-Image-Resolution", "1K")
+		iorunReply(w, 200, map[string]any{"candidates": []any{map[string]any{"content": map[string]any{"parts": []any{map[string]any{"inlineData": map[string]string{"mimeType": "image/png", "data": encoded}}}}}}})
 	}))
 	defer legacy.Close()
 	b.LegacyURL = legacy.URL
 	h := NewHandler(f, Config{Admin: f, IORun: &b})
 	w := httptest.NewRecorder()
-	h.ServeHTTP(w, iorunRequest(b, uuid.NewString(), "/generate/gemini-pro"))
-	if w.Code != 200 || calls.Load() != 1 || f.calls.Load() != 0 {
+	request := iorunRequest(b, uuid.NewString(), "/generate/gemini-pro")
+	request.Body = io.NopCloser(strings.NewReader(body))
+	h.ServeHTTP(w, request)
+	if w.Code != 200 || calls.Load() != 1 || f.calls.Load() != 0 || !strings.Contains(w.Body.String(), encoded) || w.Header().Get("X-IORun-Image-Model") != "gemini-web-nano-banana-pro" || w.Header().Get("X-IORun-Image-Resolution") != "1K" {
 		t.Fatal("legacy unified route")
 	}
 	w = httptest.NewRecorder()

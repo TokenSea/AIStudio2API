@@ -9,7 +9,8 @@ assert.equal(binding.studio_enabled, false);
 const headers = { Authorization: `Bearer ${binding.token}`, 'X-IORun-Account-ID': binding.account_id, 'X-IORun-Check-ID': randomUUID() };
 async function call(path, options = {}) {
   const r = await fetch(base + path, { headers, signal: AbortSignal.timeout(45000), ...options });
-  return { status: r.status, body: await r.json(), cookies: r.headers.getSetCookie().map(s => s.split(';')[0]).join('; ') };
+  const text = await r.text();
+  return { status: r.status, body: text ? JSON.parse(text) : null, cookies: r.headers.getSetCookie().map(s => s.split(';')[0]).join('; ') };
 }
 const ready = await call('/readiness');
 assert.equal(ready.status, 200); assert.equal(ready.body.state, 'ready');
@@ -25,5 +26,7 @@ const accounts = await call('/api/accounts', { headers: adminHeaders });
 const status = await call('/api/status', { headers: adminHeaders });
 assert.equal((await call('/api/update', { method: 'POST', headers: adminHeaders })).status, 403);
 const studio = await call('/iorun/studio-readiness');
-console.log(JSON.stringify({ result: 'PASS', apps_state: ready.body.state, account_id: binding.account_id, account_isolation: true, public_generation_bypass_blocked: true, studio_disabled: true, updater_disabled: true, runtime: status.body.state, studio: studio.body, accounts: (Array.isArray(accounts.body) ? accounts.body : accounts.body.accounts || []).map(a => ({ account_matches: a.id === binding.google_account, enabled: a.enabled, state: a.state, benefit_tier: a.benefit_tier, model_count: a.models?.length || 0 })), google_generation_calls: 0 }));
+assert.equal(studio.status, 200);
+const studioReady = studio.body.state === 'ready';
+console.log(JSON.stringify({ result: studioReady ? 'PASS' : 'PARTIAL', guard_result: 'PASS', apps_state: ready.body.state, account_id: binding.account_id, account_isolation: true, public_generation_bypass_blocked: true, studio_disabled: true, studio_ready: studioReady, updater_disabled: true, runtime: status.body.state, studio: studio.body, accounts: (Array.isArray(accounts.body) ? accounts.body : accounts.body.accounts || []).map(a => ({ account_matches: a.id === binding.google_account, enabled: a.enabled, state: a.state, benefit_tier: a.benefit_tier, model_count: a.models?.length || 0 })), google_generation_calls: 0 }));
 await call('/api/auth/logout', { method: 'POST', headers: adminHeaders });

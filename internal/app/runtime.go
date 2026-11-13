@@ -20,6 +20,7 @@ import (
 	"github.com/Mag1cFall/AIStudio2API/internal/api"
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
 	"github.com/Mag1cFall/AIStudio2API/internal/config"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 // newRuntime 装配单个生成服务实例
@@ -1057,6 +1058,14 @@ func (service *trackedService) refreshAccountState(ctx context.Context, accountI
 		return refresh, err
 	}
 	if refresh.PreviousTier == refresh.Tier && !refresh.ModelsChanged {
+		// Managed read-only startup leaves the generation service stopped.
+		// Restore its in-memory catalog even when the persisted catalog is
+		// unchanged, so inspection after restart does not report it missing.
+		if managed.Enabled() && len(service.modelSnapshot()) == 0 {
+			service.modelSyncMu.Lock()
+			service.applyCachedModelCatalog()
+			service.modelSyncMu.Unlock()
+		}
 		return refresh, nil
 	}
 	service.modelSyncMu.Lock()
