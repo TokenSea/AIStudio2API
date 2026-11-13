@@ -22,6 +22,7 @@ import (
 
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
 	appconfig "github.com/Mag1cFall/AIStudio2API/internal/config"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 	"github.com/Mag1cFall/AIStudio2API/internal/waa"
 )
 
@@ -480,6 +481,9 @@ func (runtime *goWAARuntime) do(ctx context.Context, method string, target strin
 	request, err := http.NewRequestWithContext(ctx, method, target, reader)
 	if err != nil {
 		return nil, err
+	}
+	if managed.Enabled() && strings.HasSuffix(target, "/GenerateContent") {
+		request.GetBody = nil
 	}
 	request.Header = headers.Clone()
 	if request.Header.Get("User-Agent") == "" {

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 const (
@@ -175,6 +176,9 @@ func (e *RPCError) RetryAt(now time.Time) time.Time {
 }
 
 func (c *Client) do(ctx context.Context, method string, accountID string, requestID string, body []byte, streaming bool) (*RPCResponse, error) {
+	if !managed.AllowRPC(method) {
+		return nil, managed.ErrDenied
+	}
 	rpc := newRPCRequest(method, accountID, requestID, body, streaming)
 	c.applyBenefitTier(method, accountID, rpc.Header)
 	response, err := c.transport.Do(ctx, rpc)

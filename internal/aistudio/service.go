@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 // PooledService 在账户租约内调用协议客户端
@@ -153,6 +154,9 @@ func (t *WorkerProtectedTransport) doPrepared(
 	headers.Set("Authorization", authorization)
 	if lease.CoolingDown(selectionAccessScope(selection)) {
 		return nil, ErrAccountCoolingDown
+	}
+	if err := managed.Claim(ctx, rpc.Method, lease.Account().ID, selection.ModelID); err != nil {
+		return nil, err
 	}
 	reportRequestPhase(ctx, RequestPhaseSendingUpstream)
 	response, err := worker.SendProtected(ctx, ProtectedRequest{

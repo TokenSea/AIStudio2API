@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 // accessTokenPath 为官网读取 Drive 授权 token 的 RPC 路径
@@ -39,6 +41,9 @@ func (session *loginSession) authorizeDrive(ctx context.Context, email string) e
 	}
 	if status != http.StatusUnauthorized {
 		return fmt.Errorf("GenerateAccessToken 返回 HTTP %d", status)
+	}
+	if managed.Enabled() {
+		return fmt.Errorf("iorun_drive_confirmation_required")
 	}
 	if err := session.navigate(ctx, aiStudioOrigin+"/library"); err != nil {
 		return err

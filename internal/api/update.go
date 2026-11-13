@@ -41,6 +41,10 @@ func (s *server) registerUpdates(mux *http.ServeMux) {
 }
 
 func (s *server) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
+	if s.config.IORun != nil {
+		writeJSON(w, http.StatusOK, UpdateStatus{Mode: "managed", ManagedBy: "iorun"})
+		return
+	}
 	status, err := s.config.Updates.UpdateStatus(r.Context(), r.URL.Query().Get("refresh") == "1")
 	if err != nil {
 		writeAdminUpstreamError(w, err)
@@ -50,6 +54,10 @@ func (s *server) handleUpdateStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleApplyUpdate(w http.ResponseWriter, r *http.Request) {
+	if s.config.IORun != nil {
+		iorunError(w, http.StatusForbidden, "iorun_managed_update_required")
+		return
+	}
 	status, err := s.config.Updates.ApplyUpdate(r.Context())
 	if err != nil {
 		writeAdminUpstreamError(w, err)

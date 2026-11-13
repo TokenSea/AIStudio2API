@@ -8,6 +8,7 @@ import (
 	"io"
 
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 // PageCatalogProvider 返回账户会话页面载入时目录 RPC 的响应：reload 为 false 时取最近一次载入，账户没有载入过页面时先载入；reload 为 true 时重新载入页面
@@ -59,6 +60,9 @@ func (c *Client) acceptTerms(ctx context.Context, accountID string, logging []by
 		return err
 	}
 	if body != nil {
+		if managed.Enabled() {
+			return errors.New("iorun_terms_confirmation_required")
+		}
 		response, err := c.do(ctx, "AcceptTerms", accountID, "", body, false)
 		if err != nil {
 			return err

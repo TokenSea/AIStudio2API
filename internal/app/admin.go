@@ -20,6 +20,7 @@ import (
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
 	"github.com/Mag1cFall/AIStudio2API/internal/chromeauth"
 	"github.com/Mag1cFall/AIStudio2API/internal/config"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 // runtimeAdmin 投影运行时权威状态
@@ -903,8 +904,11 @@ func keepAuthExtension(next *aistudio.StorageState, current aistudio.StorageStat
 }
 
 // RefreshAccount 在服务生命周期中立即读取账户权益与模型目录，管理页断开不中止
-func (admin *runtimeAdmin) RefreshAccount(_ context.Context, accountID string) (api.AdminAccountRefresh, error) {
-	refresh, err := admin.service.refreshAccountState(admin.service.lifecycle, accountID, true)
+func (admin *runtimeAdmin) RefreshAccount(ctx context.Context, accountID string) (api.AdminAccountRefresh, error) {
+	if !managed.Enabled() {
+		ctx = admin.service.lifecycle
+	}
+	refresh, err := admin.service.refreshAccountState(ctx, accountID, true)
 	if err != nil {
 		return api.AdminAccountRefresh{}, accountOperationError(err)
 	}

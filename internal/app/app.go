@@ -245,7 +245,14 @@ func runServer(ctx context.Context, cfg config.Config, manager *runtimeManager, 
 		manager.requests.log("service", "WARN", fmt.Sprintf("预览端口不可用，改用空闲端口 | 配置=%s | 地址=%s", cfg.PreviewListenAddr, previewListener.Addr()))
 	}
 	manager.previewAddress = previewListener.Addr().String()
+	iorun, err := api.LoadIORunBinding(os.Getenv("IORUN_BINDING_FILE"))
+	if err != nil {
+		listener.Close()
+		previewListener.Close()
+		return false, err
+	}
 	apiHandler := api.NewHandler(manager, api.Config{
+		IORun:  iorun,
 		APIKey: cfg.ProxyAPIKey, Admin: manager, Ledger: manager.ledger, Prompts: manager.prompts, Updates: updater,
 		AdminAuthEnabled: cfg.AdminAuthEnabled, AdminUsername: cfg.AdminUsername, AdminPassword: cfg.AdminPassword,
 		AdminSessionPath: filepath.Join("runtime", "admin-sessions.json"),

@@ -30,3 +30,8 @@ go.work.sum
 .idea/
 .DS_Store
 Thumbs.db
+
+# IORun operator state and private test evidence
+logs/
+deploy/iorun/data/
+.state/

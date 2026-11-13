@@ -1,4 +1,5 @@
 data/
+.git/
 auth/
 runtime/
 dist/
@@ -9,3 +10,7 @@ internal/webui/dist/
 aistudio2api
 spidermonkey/
 libwebp/
+
+logs/
+deploy/iorun/data/
+.state/

@@ -14,6 +14,7 @@ import (
 
 // Config 定义公开 API 服务配置
 type Config struct {
+	IORun            *IORunBinding
 	APIKey           string
 	Admin            AdminService
 	AdminAuthEnabled bool
@@ -145,8 +146,26 @@ func NewHandler(service aistudio.Service, config Config) http.Handler {
 	s.registerUpdates(control)
 
 	root := http.NewServeMux()
+	if config.IORun != nil {
+		worker := newIORunWorker(s, *config.IORun)
+		root.Handle("/iorun/", http.StripPrefix("/iorun", worker))
+		// Native IORun worker URLs intentionally have no path component.
+		// These aliases share the same account lock and authenticated handler.
+		root.Handle("/generate/", worker)
+		root.Handle("/readiness", worker)
+	}
 	root.Handle("GET /health", corsMiddleware(http.HandlerFunc(s.handleHealth)))
 	publicHandler := bodyLimitMiddleware(browserOriginMiddleware(config.APIKey, authMiddleware(config.APIKey, apiKeyContextMiddleware(config.APIKey, accountContextMiddleware(requestBodyMiddleware(config.Ledger, waitLaunchMiddleware(config.WaitLaunch, public)))))))
+	if config.IORun != nil {
+		original := publicHandler
+		publicHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet || (r.URL.Path != "/v1/models" && r.URL.Path != "/v1beta/models") {
+				iorunError(w, http.StatusForbidden, "iorun_managed_route_required")
+				return
+			}
+			original.ServeHTTP(w, r)
+		})
+	}
 	loggedHandler := requestLoggingMiddleware(config.Admin, corsMiddleware(publicHandler))
 	root.Handle("/v1/", loggedHandler)
 	root.Handle("/v1beta/", loggedHandler)

@@ -1,3 +1,5 @@
+> **TokenSea / IORun fork:** 本分支将 AI Studio 网页协议与现有 Gemini Apps 执行器接到 IORun 的同一图片入口。消费者继续使用 IORun Key、测试名单和原单查询；Google 与 GPT 凭据隔离。运行方式、一次派发和能力开放边界见 [IORun 集成说明](deploy/iorun/README.md)。下文保留上游说明，其中的全部协议能力不代表已向 IORun 开放。
+
 <div align="center">
 
 # AI Studio to OpenAI, Anthropic & Gemini Compatible API

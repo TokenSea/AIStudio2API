@@ -1,0 +1,34 @@
+name: iorun-aistudio2api-ciorun03
+services:
+  gemini-executor:
+    image: iorun-aistudio2api:20261113
+    restart: unless-stopped
+    init: true
+    user: "1001:1001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    working_dir: /data
+    environment:
+      IORUN_BINDING_FILE: /data/iorun/binding.json
+      GOMAXPROCS: "2"
+      GOMEMLIMIT: 512MiB
+      TZ: Asia/Taipei
+    ports: ["127.0.0.1:18490:2048"]
+    volumes: ["gemini-state:/data"]
+    tmpfs: ["/tmp:rw,nosuid,nodev,size=268435456,uid=1001,gid=1001"]
+    shm_size: 512m
+    mem_limit: 1536m
+    cpus: 1.5
+    networks:
+      iorun-private:
+        aliases: [gemini-executor]
+      egress: {}
+    logging: {driver: json-file, options: {max-size: "2m", max-file: "2"}}
+networks:
+  iorun-private:
+    external: true
+    name: iorun-gemini-api-ciorun03_private
+  egress: {}
+volumes:
+  gemini-state: {}

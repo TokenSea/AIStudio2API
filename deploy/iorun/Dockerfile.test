@@ -1,0 +1,6 @@
+FROM iorun-aistudio-deps:20261113
+ARG SPIDERMONKEY=v158.0.1-aistudio2api.1
+ARG LIBWEBP=v1.6.0-aistudio2api.1
+RUN mkdir /opt/spidermonkey-gnu /opt/libwebp-gnu \
+    && curl -fsSL https://github.com/Mag1cFall/firefox/releases/download/$SPIDERMONKEY/spidermonkey-$SPIDERMONKEY-linux-amd64-gnu.tar.gz | tar --no-same-owner -xz -C /opt/spidermonkey-gnu \
+    && curl -fsSL https://github.com/Mag1cFall/libwebp/releases/download/$LIBWEBP/libwebp-$LIBWEBP-linux-amd64-gnu.tar.gz | tar --no-same-owner -xz -C /opt/libwebp-gnu

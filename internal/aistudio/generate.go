@@ -1086,6 +1086,7 @@ func (c *Client) Generate(ctx context.Context, request GenerateRequest) (<-chan 
 		if usage == nil {
 			usage = localCompleteUsage(request, output)
 		} else if usage.OutputTokensMissing {
+			usage.Origin = "derived"
 			outputTokens := usage.TotalTokens - usage.InputTokens - usage.ToolTokens - usage.ReasoningTokens
 			if outputTokens < 0 {
 				outputTokens = localPartsTokens(output.Visible())

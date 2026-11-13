@@ -13,6 +13,7 @@ func localCompleteUsage(request GenerateRequest, output Output) *Usage {
 	reasoningTokens := localPartsTokens(output.Reasoning())
 	outputTokens := localPartsTokens(output.Visible())
 	return &Usage{
+		Origin:      "estimated",
 		InputTokens: inputTokens, ToolTokens: toolTokens, ReasoningTokens: reasoningTokens,
 		OutputTokens: outputTokens, TotalTokens: inputTokens + toolTokens + reasoningTokens + outputTokens,
 	}
@@ -28,6 +29,7 @@ func countedCompleteUsage(request GenerateRequest, output Output, count TokenCou
 	reasoningTokens := localPartsTokens(output.Reasoning())
 	outputTokens := localPartsTokens(output.Visible())
 	return &Usage{
+		Origin:      "estimated",
 		InputTokens: inputTokens, ToolTokens: toolTokens, ReasoningTokens: reasoningTokens,
 		OutputTokens: outputTokens, TotalTokens: count.InputTokens + reasoningTokens + outputTokens,
 	}

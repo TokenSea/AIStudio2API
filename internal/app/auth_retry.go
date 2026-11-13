@@ -14,6 +14,7 @@ import (
 	"github.com/Mag1cFall/AIStudio2API/internal/api"
 	"github.com/Mag1cFall/AIStudio2API/internal/camoufoxnative"
 	"github.com/Mag1cFall/AIStudio2API/internal/chromeauth"
+	"github.com/Mag1cFall/AIStudio2API/internal/managed"
 )
 
 type chromeCookieRefreshFunc func(context.Context, aistudio.AuthSource, aistudio.ChromeOAuthMaterial, string) ([]aistudio.StateCookie, *aistudio.BoundSession, error)
@@ -269,7 +270,7 @@ func (refresher *authRuntimeRefresher) do(ctx context.Context, method string, se
 		if !aistudio.DefinitiveAuthenticationFailure(err) {
 			return response, err
 		}
-		if attempt == 1 {
+		if attempt == 1 || managed.Enabled() {
 			return nil, refresher.markAuthenticationRequired(ctx, err)
 		}
 		if err := refresher.Recover(ctx, err, generation); err != nil {
