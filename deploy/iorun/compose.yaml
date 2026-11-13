@@ -13,6 +13,8 @@ services:
       IORUN_BINDING_FILE: /data/iorun/binding.json
       GOMAXPROCS: "2"
       GOMEMLIMIT: 512MiB
+      XDG_CACHE_HOME: /data/cache
+      XDG_CONFIG_HOME: /data/config
       TZ: Asia/Taipei
     ports: ["127.0.0.1:18490:2048"]
     volumes: ["gemini-state:/data"]

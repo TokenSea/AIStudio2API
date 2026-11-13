@@ -1,5 +1,0 @@
-# Optional incremental packaging: RUNTIME_BASE must be the exact image ID
-# already built by Dockerfile.iorun; context contains only the new executable.
-ARG RUNTIME_BASE
-FROM ${RUNTIME_BASE}
-COPY aistudio2api /usr/local/bin/aistudio2api
